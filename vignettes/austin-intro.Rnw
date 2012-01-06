@@ -1,0 +1,223 @@
+\documentclass{article}
+\usepackage[T1]{fontenc}
+\usepackage[bitstream-charter]{mathdesign}
+\usepackage{inconsolata}
+\usepackage[margin=1.2in]{geometry}
+\usepackage{microtype}
+\usepackage{natbib}
+\usepackage{amsmath}
+\usepackage{color}
+\definecolor{darkblue}{rgb}{0,0,0.5}
+\usepackage[colorlinks=true,linkcolor=darkblue,citecolor=darkblue,urlcolor=darkblue]{hyperref}
+\usepackage[noae,nogin]{Sweave}
+
+\title{An Introduction to Austin}
+\author{Will Lowe\\MZES\\University of Mannheim}
+
+%\VignetteIndexEntry{An R package for doing things with words} 
+%\VignettePackage{austin}
+
+\begin{document}
+
+
+\maketitle
+
+This vignette describes how to get word frequency data into \texttt{austin} and how to scale it using Wordfish or Wordscores.  Text scaling methods rely on the `bag of words' representation of documents, so it's useful to say something first about counting words and turning them into a form \texttt{austin} can deal with.
+
+\section{Counting Words}
+
+Austin's document scaling functions operate with word frequency matrices with rows representing documents and columns representing words.  You can populate these matrices and read them into R however you like.  However, if you do not yet have a prefered method try \href{http://www.williamlowe.net/software/jfreq/}{JFreq}, particularly if you a need for multiple language support, stop word removal, lemmatisation, a choice of sparse output formats, and speed.  JFreq offers three formats for word frequency data:
+\begin{description}
+\item[LDA-C] an SVMlight-like sparse format used in many topic models packages, e.g. \texttt{lda}.  It is described in section B.2 of the documentation from \citet{BleiLDAC}\footnote{Not noted on this webpage is that word indices start from 0, not 1.}.  (SVMlite format is described at \citep{JoachimsSVMlight}). 
+\item[Matrix Market] a sparse matrix format common in numerical analysis applications, and described by
+\citet{Boisvertetal1996}.  JFreq generates and Austin reads only the 'coordinate' (sparse) format for integer elements because this is most suitable for representing sparse word count data.
+\item[CSV] the comma-separated value format as understood by R's \texttt{read.csv} function with \texttt{row.names=1}.  This is not generally suitable for word count data and does not scale well to large document collections.
+\end{description}
+
+If you have generated word frequencies using JFreq and specified the output folder to be \texttt{folder} then
+reading the data back into austin is straightforward, whichever output format was chosen:
+\begin{verbatim}
+> wfm <- read.jfreq('folder')
+\end{verbatim} 
+You can also use the helper functions in Austin to read individual files in the supported formats.  See the documentation for \texttt{read.ldac} and \texttt{read.mtx} for details.
+
+Austin works with any two dimensional matrix-like object with documents as rows and words as columns\footnote{Previous versions of this package used a set of accessor functions and a custom word frequency matrix object \texttt{wfm}.  This turned out to be more trouble than it was worth.  The orientation is now fixed: documents are rows. Dammit}.  Such objects may be of any class that indexes like a matrix.  We recommend 
+the \texttt{Matrix} package's sparse matrix class for word frequency data.  All the example data sets in the package are in this form.  Word frequency matrices should have a full set of row and column names. Ideally these should also be labelled 'docs' and 'words' respectively, so we remember what we're doing.
+
+Once a matrix has been constructed the function \texttt{trim} can be used to remove low frequency words and words that occur in only a few documents.  It can also be used to sample randomly from the set of words.  
+This can be helpful to speed up analyses and check the robustness of scaling results to different vocabulary choices.
+
+\section{Scaling Documents using Wordfish}
+
+Austin implements the one dimensional text scaling model Wordfish
+\citep{SlapinProksch2008,ProkschSlapin2008}.  Under a slightly different parametrisation
+this is Goodman's RC(M) model with M=1 \citep[e.g.][]{Goodman1985}.  
+When document positions are random variables rather than unknown parameters the model has been 
+called Rhetorical Ideal Points \citep{MonroeMaeda04}, which is in turn equivalent to a form of 
+multinomial Item Reponse Theory or Latent Trait model with Poisson link 
+\citep[see e.g.][]{MoustakiKnott2000}.  
+
+\subsection{Model and Estimation}
+
+Austin implements Goodman's model
+in Slapin and Proksch's parameterisation: The number of times word $j$ occurs in
+document $i$ is modeled as
+\begin{align*}
+P(Y_{ij} \mid \theta_i) &= \text{Poisson}(\mu_{ij})\\
+\mu_{ij} &= \psi_j + \beta_j\theta_i + \alpha_i.
+\end{align*}
+where $\theta$ is the document position parameter of primary interest for scaling applications.
+
+The model is identified by setting $\alpha_1=0$ and constraining $\theta$ to 
+have zero mean and unit variance.  The package's \texttt{wordfish} estimation routine then resolves the 
+remaining sign ambiguity by forcing one document position to be large than another using 
+the \texttt{dir} argument.
+
+The four sets of parameters are estimated using a
+Conditional Maximum Likelihood procedure that alternates 
+the estimation of the word parameters ($j$) and document 
+parameters ($i$).  
+Word parameter estimation is stabilised by ridge regularizing the word parameters
+$\beta$.  This is 
+equivalent to putting an independent Normal$(0,\sigma^2)$
+prior on each $\beta$, ensuring they do not get too large due to small numbers of documents
+or low frequency words.  Standard errors for $\theta$ are generated 
+from the profile likelihood. 
+
+\subsection{Example}
+
+<<echo=FALSE,fig=FALSE>>=
+  options(width=80)
+@
+Here we show an analysis using simualted data.  We start by loading the package
+<<echo=TRUE,fig=FALSE>>=
+library('austin')
+@
+and generate an small set of simulated data 
+according to the model assumptions above using 
+the \texttt{sim.wordfish} function
+<<sim.data,echo=TRUE,fig=FALSE>>=
+dd <- sim.wordfish(docs=10, vocab=12)
+@
+The true document positions are \texttt{dd\$theta} and the data is \texttt{dd\$Y}.
+Next we try to recover these position from the generated word counts by
+fitting a wordfish model
+<<fit.wordfish,echo=TRUE,fig=FALSE>>=
+wf <- wordfish(dd$Y, dir=c(1,10))
+@
+The \texttt{dir} argument identifies the sign of $\theta$.  Here
+$\hat{\theta}_{1} < \hat{\theta}_{10}$.  You can also hand the 
+\texttt{wordfish} function a set of starting parameters using 
+\texttt{params} or specify the initialization function to use instead
+using \texttt{init.fun}.  The actual estimation will be done using \texttt{fit.fun}.
+You can also set the estimation tolerance with \texttt{tol}, 
+the regularization parameter for $\beta$ with \texttt{sigma}. Finally, if
+you want a running commentary on the estimation progress, set \texttt{verbose=TRUE}.
+All these have sensible default values, although you may wish to set
+\texttt{dir} to order two documents that you think probably have 
+opposing positions.  
+
+If you write your own initialization or estimation functions
+just adhere to the calling interface and return values of \texttt{classic.wordfish}
+or \texttt{initialize.wordfish}, and hand \texttt{wordfish} the name of your 
+new function as the value of \texttt{init.fun}
+or \texttt{fit.fun} respectively.
+
+After estimation the model's estimated document positions can be summarized using
+<<summary,echo=TRUE,fig=FALSE>>=
+summary(wf)
+@
+The remaining parameters examined using the \texttt{coef} function.  A fitted
+word counts are available using \texttt{fitted}.  New documents can be scaled 
+using \texttt{predict} although the confidence intervals do not currently 
+take into account estimation uncertainty in $\psi$, $\beta$ and $\alpha$.
+
+Estimated document positions and 95\% confidence intervals can also be
+graphed\footnote{For more than a few tens of words the confidence
+  intervals will probably be `implausibly' small.  They are
+  nevertheless asymptotically correct given the model assumptions. It
+  is those assumptions you might doubt.}.  Any second argument
+to the plot function is taken to be a vector of true document positions.
+These are then plotted over the original plot, as shown in Figure~\ref{fig1}.
+The red dots are the true document positions.
+
+<<simwf,echo=FALSE,fig=TRUE,include=FALSE>>=
+plot(wf, dd$theta)
+@
+
+\begin{figure}[tbp]
+\centerline{ \includegraphics[scale=0.7]{austin-intro-simwf} }
+\caption{Wordfish position estimates on simulated data using the
+\texttt{plot(wf, dd\$theta)}.}
+\label{fig1}
+\end{figure}
+
+\section{Scaling Documents using Wordscores}
+
+Wordscores \citep{Laveretal2003} is a non-parametric method for scaling texts closely
+related to both correspondence analysis by implementing an incomplete
+reciprocal averaging algorithm, and to quadratic ordination as an
+approximation to an unfolding model \citep[see][for discussion]{Lowe2008}.
+
+\subsection{Model and Estimation}
+
+Wordscores makes a low rank matrix decomposition of a word frequency matrix in 
+essentially the same way as correspondence analysis, except that an initial set of
+row scores ($\theta$) are assumed to be the known positions of `reference' documents.  
+From these positions, column scores $\pi$ are computed and referred to as `wordscores'.
+
+Out of sample `virgin' documents are assigned positions on the basis of the initial wordscores
+by taking the average of the scores of the words in the new document.  Several ad-hoc 
+weighting procedures have been suggested for making out of sample document positions
+comparable to those of the original documents.  Standard error formulae have also been 
+offered, although the meaning of standard errors in a model with no explicit probability
+model is unclear.  For completeness Austin implements the weighting and standard error
+computations described in \citet{Laveretal2003}.
+
+\subsection{Example}
+
+We replicate the analysis in the original papers by loading a simulated data set
+<<lbg.data,echo=TRUE,fig=FALSE>>=
+data(lbg)
+lbg
+@
+For this data we assume that scores for documents R1-R5 are known, and V1 is 
+an out of sample document whose position we require.  We first separate the
+in and out of sample data:
+<<split.data,echo=TRUE,fig=FALSE>>=
+ref <- lbg[1:5,]
+vir <- lbg[6,,drop=FALSE]
+@
+fit the model using the reference documents and positions from the paper,
+and then summarise the result
+<<fit.ws,echo=TRUE,fig=FALSE>>=
+ws <- wordscores(ref, scores=seq(-1.5, 1.5, by=0.75))
+@
+<<sum.wordscores,echo=TRUE,fig=FALSE>>=
+summary(ws)
+@
+
+The summary presents details about the reference documents.  Like the \texttt{wordfish}
+function \texttt{wordscores} also accepts a \texttt{fit.fun} argument.
+
+If we want to see the 
+wordscores that were generated we look for the model's coefficients
+<<coef,echo=TRUE,fig=FALSE>>=
+coef(ws)
+@
+which can also be plotted.
+
+To get a position for the new document we use the predict function
+<<predict,echo=TRUE,fig=FALSE>>=
+predict(ws, newdata=vir)
+@
+When more than one document is to be predicted, an ad-hoc procedure 
+is applied by default to the predicted positions to rescale them to the same
+variance as the reference scores.  This may or may not be what you want.
+
+
+\newpage
+\bibliographystyle{apsr}
+\bibliography{austin}
+
+\end{document}

@@ -1,0 +1,22 @@
+Package: austin
+Type: Package
+Title: A package for doing things with words
+Version: 0.2
+Date: 2012-01-05
+Author: Will Lowe
+Maintainer: Will Lowe <will.lowe@uni-mannheim.de>
+Description: Doing things with words currently means scaling documents on a
+    presumed underlying dimension on the basis of word frequencies and heroic
+    assumptions about language generation.
+Depends:
+    R (>= 2.10),
+    numDeriv,
+    Matrix
+License: GPL
+Collate:
+    'austin.R'
+    'engines.R'
+    'uncertainty.R'
+    'wfm.R'
+    'wordfish.R'
+    'wordscores.R'
