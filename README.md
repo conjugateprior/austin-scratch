@@ -1,7 +1,7 @@
 # The austin Package
 
 This package is designed to fit wordfish and wordscores models.  When
-this code is done it will replace hte package currently living on
+this code is done it will replace the package currently living on
 r-forge.
 
 ## TODO

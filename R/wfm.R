@@ -8,23 +8,23 @@
 ##' @export
 ##' @return a sparse Matrix object representing word frequencies with documents as rows and words as columns
 ##' @author Will Lowe
-read.jfreq <- function(folder){
+read_jfreq <- function(folder){
   csv <- grep("data.csv", dir(folder), value=TRUE)
   if (length(csv) > 0)
     m <- read.csv(file.path(folder, csv), encoding='UTF-8', row.names=1, header=TRUE)
   mtx <- grep("data.mtx", dir(folder), value=TRUE)
   if (length(mtx)>0)
-    m <- read.mtx(folder, jfreq=TRUE)
+    m <- read_mtx(folder, jfreq=TRUE)
   ldac <- grep("data.ldac", dir(folder), value=TRUE)
   if (length(ldac)>0)
-    m <- read.ldac(folder, jfreq=TRUE)
+    m <- read_ldac(folder, jfreq=TRUE)
   return(m)
 }
 
 ##' Read a Matrix Market format file or folder
 ##'
 ##' If jfreq=TRUE read a JFreq output folder f in Matrix Market format, although
-##' you could just use read.jfreq for that.  If jfreq=FALSE read a Matrix Market
+##' you could just use read_jfreq for that.  If jfreq=FALSE read a Matrix Market
 ##' file f with no row or column labels.  Note that jfreq determines whether f is
 ##' considered to be a folder or a file.  This is a thin wrapper around the Matrix
 ##' package's readMM function.
@@ -35,12 +35,12 @@ read.jfreq <- function(folder){
 ##' @return a sparse Matrix object representing word frequencies
 ##' @export
 ##' @author Will Lowe
-read.mtx <- function(f, jfreq=TRUE){
+read_mtx <- function(f, jfreq=TRUE){
   if (!jfreq)
-    m <- read.mtx.format(f) ## just one file
+    m <- read_mtx_format(f) ## just one file
   else {
     datafilename <- file.path(f, grep("data.mtx", dir(f), value=TRUE)) ## covers zipped ones
-    m <- read.ldac.format(datafilename)
+    m <- read_ldac_format(datafilename)
     try({rownames(m) <- read.csv(file.path(f, 'docs.csv'),
                                  fileEncoding='UTF8', header=FALSE)[,1]})
     try({colnames(m) <- read.csv(file.path(f, 'words.csv'),
@@ -58,16 +58,16 @@ read.mtx <- function(f, jfreq=TRUE){
 ##' @return a sparse Matrix object representing word frequencies
 ##' @export
 ##' @author Will Lowe
-read.mtx.format <- function(mtxfile){
+read_mtx_format <- function(mtxfile){
   readMM(mtxfile)
 }
 
 ##' Read an LDA-C format file or folder
 ##'
 ##' When jfreq=TRUE read a JFreq output folder f in LDA-C format, although
-##' you could just use read.jfreq for that.  When jfreq=FALSE read an LDA-C
+##' you could just use read_jfreq for that.  When jfreq=FALSE read an LDA-C
 ##' file f with no row or column labels.  Note that jfreq determines whether f is
-##' considered to be a folder or a file.  This function is a wrapper around read.ldac.format
+##' considered to be a folder or a file.  This function is a wrapper around read_ldac_format
 ##'
 ##' The LDA-C format is consists of a file in which line i is of the form
 ##' N [A:X]+ representing that the word with index A occurred X times in the i-th document.
@@ -86,13 +86,13 @@ read.mtx.format <- function(mtxfile){
 ##' @return a sparse Matrix object representing word frequencies
 ##' @export
 ##' @author Will Lowe
-read.ldac <- function(f, jfreq=TRUE){
+read_ldac <- function(f, jfreq=TRUE){
   if (!jfreq)
-    m <- read.ldac.format(f) ## just one file
+    m <- read_ldac_format(f) ## just one file
   else {
     ## a folder full of files
     datafilename <- file.path(f, grep("data.ldac", dir(f), value=TRUE)) ## covers zipped ones
-    m <- read.ldac.format(datafilename)
+    m <- read_ldac_format(datafilename)
     try({rownames(m) <- read.csv(file.path(f, 'docs.csv'),
                                  fileEncoding='UTF8', header=FALSE)[,1]})
     try({colnames(m) <- read.csv(file.path(f, 'words.csv'),
@@ -109,7 +109,7 @@ read.ldac <- function(f, jfreq=TRUE){
 ##' @return a sparse matrix of word count information without word or documents
 ##' @export
 ##' @author Will Lowe
-read.ldac.format <- function(ldafile){
+read_ldac_format <- function(ldafile){
   one <- scan(ldafile, what = "", sep = "\n")
   rs <- length(one) 
   two <- chartr(":", " ", one)
@@ -145,7 +145,7 @@ read.ldac.format <- function(ldafile){
 ##' @return nothing.  Used for the file saving side-effect
 ##' @export
 ##' @author Will Lowe
-write.bmr <- function(wfm, y, file="data.bmr"){
+write_bmr <- function(wfm, y, file="data.bmr"){
   sink(file)
   for (i in 1:nrow(wfm)){
     nzero <- which(wfm[i,]>0) ## we index from zero, although this is not necessary
@@ -160,7 +160,7 @@ write.bmr <- function(wfm, y, file="data.bmr"){
 ##' This function writes a sparse word frequency matrix into LDA-C format.  This involves
 ##' three files, called by default data.ldac, docs.csv and words.csv, and which contain
 ##' the word frequency information in LDA-C format, the document names, and the words
-##' respectively.  See read.ldac for the details of the LDA-C format.
+##' respectively.  See read_ldac for the details of the LDA-C format.
 ##' 
 ##' @title Write a matrix into LDA-C format
 ##' @param wfm a word frequency matrix with documents as rows and words as columns
@@ -169,7 +169,7 @@ write.bmr <- function(wfm, y, file="data.bmr"){
 ##' @return nothing. used for the file saving side-effect 
 ##' @export
 ##' @author Will Lowe
-write.ldac <- function(wfm, folder, names=c("data.ldac", "docs.csv", "words.csv")){
+write_ldac <- function(wfm, folder, names=c("data.ldac", "docs.csv", "words.csv")){
   if (!file.exists(folder))
     dir.create(folder)
   ds <- file.path(folder, names[2])

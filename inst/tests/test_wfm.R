@@ -41,4 +41,22 @@ test_that("trim: sample.docs", {
   expect_equal(rownames(mmat.out), spl("D3 D2"))  
 })
 
+test_that("ldac: round tripping", {
+  unlink('ldac-out', TRUE) ## prepare
+  write_ldac(mmat, 'ldac-out')
+  mmat.recon <- read_ldac('ldac-out')  
+  expect_equal(mmat.recon, mmat)
+  unlink('ldac-out', TRUE)
+})
+
+test_that("mtx: round tripping", {
+  require(Matrix)
+  unlink('mtx-out') ## prepare
+  writeMM(mmat, 'mtx-out')
+  mmat.recon <- read_mtx_format('mtx-out')
+  expect_equal(mmat.recon, mmat)
+  mmat.recon.2 <- read_mtx('mtx-out', jfreq=FALSE)  
+  expect_equal(mmat.recon.2, mmat)
+  unlink('mtx-out')
+})
 
