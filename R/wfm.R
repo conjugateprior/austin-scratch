@@ -190,13 +190,13 @@ write.ldac <- function(wfm, folder, names=c("data.ldac", "docs.csv", "words.csv"
 
 ##' Trim a word frequency matrix
 ##'
-##' Removes words that do not both occur at least min.count times in at least min.doc documents,
+##' Removes words that do not both occur at least min.count times in total across at least min.doc documents,
 ##' and optionally subsamples the remainder.
 ##' 
-##' @title Trim a word freqeuncy matrix
+##' @title Trim a word frequency matrix
 ##' @param wfm a word count matrix with docs as rows and words as columns
-##' @param min.count minimum word frequency over all documents
-##' @param min.doc minimum number of documents containing at least one instance of a word
+##' @param min.count minimum number of times a word occurs over all documents
+##' @param min.doc minimum number of documents that must contain a word
 ##' @param sample.docs number of randomly chosen remaining word types to retain in the matrix.  If NULL, all documents are kept
 ##' @param sample.words number of randomly chosen documents to retain in the matrix. If NULL, all words are kept
 ##' @param verbose whether to generate a running commentary
@@ -204,28 +204,33 @@ write.ldac <- function(wfm, folder, names=c("data.ldac", "docs.csv", "words.csv"
 ##' @export
 ##' @author Will Lowe
 trim <- function(wfm, min.count=5, min.doc=5, sample.docs=NULL, sample.words=NULL, verbose=TRUE){
+  
+  N = nrow(wfm)
+  V = ncol(wfm)
+  
   rs1 <- which(colSums(wfm) >= min.count)
   if (verbose)
-    cat("Words appearing less than", min.count, "times:", (ncol(wfm) - length(rs1)), "\n")
+    cat("Words appearing less than", min.count, "times:", (V - length(rs1)), "\n")
   
-  rs2 <- which(apply(wfm, 1, function(x){ sum(x>0) >= min.doc } ))
+  rs2 <- which(apply(wfm, 2, function(x){ sum(x>0) }) >= min.doc)
   if (verbose)
-    cat("Words appearing in fewer than", min.doc, "documents:", (ncol(wfm) - length(rs2)), "\n")
+    cat("Words appearing in fewer than", min.doc, "documents:", (V - length(rs2)), "\n")
   
   tokeep <- intersect(rs1, rs2)
+	
   if (length(tokeep)==0)
-    stop("No words left after trimming")
+    stop("No words left after trimming!")
   
   if (!is.null(sample.words))
-    tokeep.words <- sample(tokeep, min(length(tokeep), sample.words))
+    tokeep.words <- sort(sample(tokeep, min(length(tokeep), sample.words)))
   else
     tokeep.words <- sort(tokeep) ## alphabetise
   
   if (!is.null(sample.docs))
-    tokeep.docs <- sample(1:nrow(wfm), min(nrow(wfm), sample.docs))
+    tokeep.docs <- sample(1:N, min(N, sample.docs))
   else
-    tokeep.docs <- 1:nrow(wfm)
+    tokeep.docs <- 1:N
   
-  return(wfm[tokeep.docs, tokeep.words,drop=FALSE])
+  return(wfm[tokeep.docs, tokeep.words, drop=FALSE])
 }
 
