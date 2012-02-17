@@ -1,0 +1,126 @@
+source('wordfish.R')
+ls()
+sim.wordfish()
+Y <- sim.wordfish()$Y
+Y
+Y <- sim.wordfish(docs=6, vocab=4)$Y
+Y
+Y <- sim.wordfish(docs=3, vocab=4)$Y
+Y
+save(Y, file='../inst/tests/wfm.RData')
+library(lme4)
+sY = as.Matrix(Y)
+sY = Matrix(Y)
+sY
+sY = SparseMatrix(Y)
+?Matrix
+Y
+sY
+rmat <- Y
+mmat <- sY
+save(rmat, mmat, file='../inst/tests/mats.RData')
+rmat
+library(test_that)
+library(testthat)
+source('../../R/wfm.R')
+test_dir('.')
+test_dir('.')
+debug(trim)
+trim(rmat)
+rs1
+rmat
+colSums(rmat)
+c
+source("/Users/will/tmp/austin/R/wfm.R")
+test_dir('.')
+rmat
+source("/Users/will/tmp/austin/R/wfm.R")
+source("/Users/will/tmp/austin/inst/tests/test_add_scale.R")
+test_dir('.')
+trim(rmat, min.count=50, min.doc=2)
+str_split
+split
+?split
+strsplit
+test_dir('.')
+?strsplit
+test_dir('.')
+test_dir('.')
+test_dir('.')
+trim(rmat, min.count=1, min.doc=4)
+rmat
+rmat
+trim(rmat, min.count=1, min.doc=3)
+set.seed(12345)
+source("/Users/will/tmp/austin/R/wfm.R")
+trim(rmat, min.count=1, min.doc=3,sample.docs=2)
+source("/Users/will/tmp/austin/R/wfm.R")
+set.seed(12345)
+trim(rmat, min.count=1, min.doc=3,sample.docs=2)
+set.seed(12345)
+trim(rmat, min.count=1, min.doc=1,sample.docs=2)
+set.seed(12345)#
+  rmat.out <- trim(rmat, min.count=1, min.doc=1, sample.docs=2, verbose=FALSE) # keep everything#
+  mmat.out <- trim(mmat, min.count=1, min.doc=1, sample.docs=2, verbose=FALSE) # keep everything
+rmat.out
+mmat.out
+test_dir('.')
+trim(rmat, min.count=1, min.doc=4, verbose=FALSE)
+trim(rmat, min.count=1, min.doc=1, verbose=FALSE)
+trim(rmat, min.count=1, min.doc=2, verbose=FALSE)
+trim(rmat, min.count=1, min.doc=3, verbose=FALSE)
+test_dir('.')
+trim(rmat, min.count=1, min.doc=3, verbose=FALSE)
+trim(rmat, min.count=6, min.doc=3, verbose=FALSE)
+colSums(rmat)
+trim(rmat, min.count=50, min.doc=3, verbose=FALSE)
+as.vector(trim(rmat, min.count=50, min.doc=3, verbose=FALSE))
+test_dir('.')
+test_dir('.')
+rmat
+write.ldac(rmat, 'ldac')
+recon.rmat <- read.ldac('ldac')
+recon.rmat
+recon.rmat == rmat
+sum(recon.rmat == rmat(
+))
+sum(recon.rmat == rmat)
+mmat <- recon.rmat
+save(mmat, rmat, file="mats.RData')
+)
+")
+save(mmat, rmat, file="mats.RData")
+test_dir('.')
+m.recon.rmat <- read.ldac.format('ldac/data.ldac')
+m.recon.rmat
+m.recon.rmat == recon.rmat
+rownames(m.recon.rmat)
+colnames(m.recon.rmat)
+colnames(recon.rmat)
+rownames(recon.rmat)
+dimnames(rmat)
+dimnames(mmat)
+source('../../R/wfm.R')
+?unlink
+file.remove('ldac')
+unlink('ldac', TRUE)
+test_dir('.')
+?writeMM
+writeMM(mmat, file='mtx-out')
+mmat
+read_mtx_format('mtx-out')
+read_mtx('mtx-out', jfreq=FALSE)
+test_dir('.')
+test_dir('.')
+read_mtx('mtx-out', jfreq=FALSE)
+writeMM(mmat, file='mtx-out')
+read_mtx('mtx-out', jfreq=FALSE)
+str(read_mtx('mtx-out', jfreq=FALSE))
+str(mmat)
+ll
+str(read_mtx('mtx-out', jfreq=FALSE))
+ls()
+m.recon.rmat
+str(m.recon.rmat)
+str(read_mtx('mtx-out', jfreq=FALSE))
+str(recon.rmat)

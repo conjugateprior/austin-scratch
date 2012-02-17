@@ -419,3 +419,147 @@ classic.wordscores <- function(wfm, scores){
   list(pi=pi, theta=scores, data=wfm)
 }
 
+
+rcm.wordfish <- function(wfm, dir, tol, sigma, params, verbose=FALSE){
+
+  LL.reg <- function(params, wfm){
+    logexpected <- params$phi * outer(params$theta, params$beta) +
+      outer(params$alpha, params$psi, "+") + params$grand
+    sum(sum(wfm * logexpected - exp(logexpected)))
+  }
+  
+  LL.psi.beta <- function(params, grand, phi, theta, alpha){    
+    logexpected <- phi * outer(theta, params[1:V]) +
+      outer(alpha, params[(V+1):(2*V)], "+") + grand
+    sum(sum(wfm * logexpected - exp(logexpected)))
+  }
+
+  LL.alpha.theta <- function(params, grand, phi, beta, psi){
+    logexpected <- phi * outer(params[1:D], beta) +
+      outer(params[(D+1):(2*D)], psi, "+") + grand
+    sum(sum(wfm * logexpected - exp(logexpected)))
+  }
+
+  LL.grand <- function(params, phi, beta, psi, theta, alpha){
+    logexpected <- phi * outer(theta, beta) +
+      outer(alpha, psi, "+") + params[1]
+    sum(sum(wfm * logexpected - exp(logexpected)))
+  }
+
+  LL.phi <- function(params, grand, beta, psi, theta, alpha){
+    logexpected <- params[1] * outer(theta, beta) +
+      outer(alpha, psi, "+") + grand
+    sum(sum(wfm * logexpected - exp(logexpected)))
+  }
+  
+  D  <- nrow(wfm)
+  V  <- ncol(wfm)  
+  oldll <- -Inf
+  ll <- LL.reg(params, wfm)
+  ll.path <- ll ## keep track
+  iter <- 0
+  if (verbose) cat(iter, "\tLL(reg):", ll, "\n")
+
+  ## check that we're not going backwards but not yet done
+  prog <- function(oldll, newll, tol){
+    (newll-oldll) > 0 && (newll-oldll) > tol
+  }
+
+  iter <- 1
+  while ( prog(oldll,ll,tol) ) {
+    if (verbose) cat(iter, "\t")
+        
+    resa <- optim(par=c(params$theta, params$alpha),
+                  fn=LL.alpha.theta, gr=NULL,
+                  beta=params$beta, psi=params$psi, grand=params$grand, phi=params$phi,
+                  method=c('BFGS'), control=list(fnscale=-1))
+    if (resa$convergence!=0)
+      warning("optim failed in alpha-theta")
+    params$theta <- resa$par[1:D]
+    params$alpha <- resa$par[(D+1):(2*D)]
+
+    m.theta <- mean(params$theta)
+    s.theta <- sqrt(mean((params$theta-m.theta)**2))
+    params$theta <- (params$theta - m.theta)/s.theta
+
+	m.alpha <- mean(params$alpha)
+	params$alpha <- params$alpha - m.alpha
+
+    if (params$theta[dir[1]] > params$theta[dir[2]])
+      params$theta <- params$theta*(-1)
+    
+    resa <- optim(par=c(params$beta, params$psi), fn=LL.psi.beta, gr=NULL,
+                  grand=params$grand, phi=params$phi, theta=params$theta, alpha=params$alpha,
+                  method=c('BFGS'), control=list(fnscale=-1)
+                  )
+    if (resa$convergence!=0)
+      warning("optim failed in psi-beta")
+    params$beta <- resa$par[1:V]
+    params$psi <- resa$par[(V+1):(2*V)]
+
+    m.beta <- mean(params$beta)
+    s.beta <- sqrt(mean((params$beta-m.beta)**2))
+    params$beta <- (params$beta - m.beta)/s.beta
+
+	m.psi <- mean(params$psi)
+	params$psi <- params$psi - m.psi
+
+    resa <- optim(par=c(params$grand), fn=LL.grand, gr=NULL,
+                  beta=params$beta, psi=params$psi, phi=params$phi, theta=params$theta, alpha=params$alpha,
+                  method=c('BFGS'), control=list(fnscale=-1)
+                  )
+    if (resa$convergence!=0)
+      warning("optim failed in grand")
+    params$grand <- resa$par[1]
+
+    resa <- optim(par=c(params$phi), fn=LL.phi, gr=NULL,
+                  beta=params$beta, psi=params$psi, grand=params$grand, theta=params$theta, alpha=params$alpha,
+                  method=c('BFGS'), control=list(fnscale=-1)
+                  )
+    if (resa$convergence!=0)
+      warning("optim failed in phi")
+    params$phi <- resa$par[1]
+
+    new.ll <- LL.reg(params, wfm)
+    if (verbose) {
+      cat("LL(reg):", ll, "\t(diff:", (new.ll-ll), ")\n")
+      flush.console()
+    }
+    oldll <- ll
+    ll <- new.ll
+    ll.path <- c(ll.path, ll)
+    iter <- iter + 1
+  }
+  if (verbose)
+    cat("Log likelihood:", LL.reg(params, wfm), "\n")
+  
+  model <- list(dir=dir,theta=params$theta, alpha=params$alpha,
+                beta=params$beta, psi=params$psi, phi=params$phi, grand=params$grand, 
+                docs=rownames(wfm),
+                words=colnames(wfm),
+                ll=ll, ll.path=ll.path, data=wfm)
+
+  return(model)  ## just a list of stuff at this point
+}
+
+rcm.init <- function(wfm){
+	mm <- loglin(dd$Y+0.1, margin=list(c(1,2)), param=TRUE)	
+	params <- list(grand=mm$param$`(Intercept)`,
+		psi=mm$param$words, alpha=mm$param$docs)
+	inter <- svd(mm$param$docs.words)
+	params$theta <- inter$u[,1]
+	params$beta <- inter$v[,1]
+	params$phi <- 0 # inter$d[1]
+	
+	m.beta <- mean(params$beta)
+    s.beta <- sqrt(mean((params$beta-m.beta)**2))
+    params$beta <- (params$beta - m.beta)/s.beta
+    
+    m.theta <- mean(params$theta)
+    s.theta <- sqrt(mean((params$theta-m.theta)**2))
+    params$theta <- (params$theta - m.theta)/s.theta
+
+	return(params)
+}
+	
+
