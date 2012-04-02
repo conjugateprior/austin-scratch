@@ -1,0 +1,269 @@
+gg3 <- apply(dds[,1:2], 1, z.logodds, N1=sum(dds[,1]), N2=sum(dds[,2]))
+head(dds[order(gg3),], n=300)
+dd <- read.csv('~/Desktop/uk_manif.csv', row.names=1)
+head(dd)
+head(dd, n=20)
+con.cols
+lab.cols
+lab.data <- rowSums(dd[,lab.cols])
+con.data <- rowSums(dd[,con.cols])
+dd1 <- data.frame(lab=lab.data, con=con.data)
+head(dd1)
+colSums(dd1)
+gg <- apply(dd1, 1, z.logodds, N1=120178, N2=112580)
+head(gg)
+head(cbind(dd1, gg))
+head(cbind(dd1, gg)[order[gg],])
+head(cbind(dd1, gg)[order(gg),])
+head(cbind(dd1, gg)[order(gg, decreasing=TRUE),])
+head(cbind(dd1, gg)[order(gg, decreasing=TRUE),], n=100)
+gg <- apply(dd1, 1, prop.diff, N1=120178, N2=112580)
+source("/Users/will/Dropbox/teaching/ljubljana-week1/Day 3 Sampling and Descriptive Inferences/lab/partisan.R")
+gg <- apply(dd1, 1, prop.diff, N1=120178, N2=112580)
+dd1$pdiff <- gg
+gg1 <- apply(dd1, 1, z.logodds, N1=120178, N2=112580)
+pos.words <- dd1$pdiff > 0
+neg.words <- dd1$pdiff < 0
+dd1[order(gg1, decreasing=TRUE),]
+dd1$zlo <- gg1
+head(dd1$zlo)
+head(dd1[pos.words,])
+plot(log(rowSum(dd1[,1:2])), zlo * sign(pdiff))
+plot(log(rowSums(dd1[,1:2])), zlo * sign(pdiff))
+plot(log(rowSums(dd1[,1:2])), dd1$zlo * sign(pdiff))
+plot(log(rowSums(dd1[,1:2])), dd1$zlo * sign(dd1$pdiff))
+text(log(rowSums(dd1[,1:2])), dd1$zlo * sign(dd1$pdiff), labels=row.names(dd1))
+?text
+head(row.names(dd1))
+text(log(rowSums(dd1[,1:2])), dd1$zlo * sign(dd1$pdiff), labels=row.names(dd1))
+head(dd1['tax',])
+head(dd1['pension',])
+head(dd1['european',])
+source("/Users/will/Dropbox/teaching/ljubljana-week1/Day 3 Sampling and Descriptive Inferences/lab/partisan.R")
+N1
+colSums(dd1)
+colSums(dd)
+dd['tax',]
+chi2(c(72,21), N1=29272, N2= 23064)
+source("/Users/will/Dropbox/teaching/ljubljana-week1/Day 3 Sampling and Descriptive Inferences/lab/partisan.R")
+chi2(c(72,21), N1=29272, N2= 23064)
+prop.diff(c(72,21), N1=29272, N2= 23064)
+source("/Users/will/Dropbox/teaching/ljubljana-week1/Day 3 Sampling and Descriptive Inferences/lab/partisan.R")
+chi2(c(72,21), N1=29272, N2= 23064)
+dd['europe',]
+dd['european',]
+chi2(c(29,27), N1=29272, N2= 23064)
+cbind(dd['european',])
+rbind(dd['european',])
+colSums(dd)
+dd['tax',])
+dd['tax',]
+chisq.test(matrix(c(21, 72, 23064-21, 29272-72), ncol=2))
+c(21/23064, 72/29272)
+(21/23064 / 72/29272)
+72/29272 / 21/23064
+read.csv('~/Desktop/bara-debate.csv', row.names=1)
+dd <- read.csv('~/Desktop/bara-debate.csv', row.names=1)
+names(dd)
+m <- dd[,2:7]
+m
+names(m)
+library(MASS)
+model <- corresp(m, nf=2)
+plot(model)
+names(names)
+names(model)
+model$rscore
+ls()
+load('/Users/will/Dropbox/teaching/ljubljana-week1/Day 5 Research Design/surveys/merged.Rdata')
+ls()
+newd
+q()
+library(ggplot2)
+load('~/data/maps/worldmap.rdata')
+names(worldmap)
+ls()
+names(world.map)
+world.ggmap <- fortify(world.map, region='NAME')
+gpclibPermitStatus
+?gpclibPermitStatus
+gpclibPermitStatus(TRUE)
+gpclibPermit()
+world.ggmap <- fortify(world.map, region='NAME')
+dim(world.map)
+head(world.map)
+str(world.map)
+fortify
+names(world.map)
+elect.gen.tot <- read.csv("~/data/maps/Total_Electricity_Net_Generation_(Billion_Kilowatthours).csv", #
+     sep = ",", dec = ".")
+head(elect.gen.tot)
+elect.gen.tot <- read.csv("~/data/maps/Total_Electricity_Net_Generation_(Billion_Kilowatthours).csv", #
+     sep = ",", dec = ".", row.names=1)
+elect.gen.tot <- read.csv("~/data/maps/Total_Electricity_Net_Generation_(Billion_Kilowatthours).csv", #
+     sep = ",", dec = ".")
+elect.gen.tot <- elect.gen.tot[4:nrow(elect.gen.tot), c(1, 3:7))
+elect.gen.tot <- elect.gen.tot[4:nrow(elect.gen.tot), c(1, 3:7)]
+head(elect.gen.tot)
+names(elect.gen.tot) <- c('country', 2004:2008)
+head(elect.gen.tot)
+names(elect.gen.tot) <- c('id', 2004:2008)
+head(elect.gen.tot)
+names(elect.gen.tot) <- c('id', paste('y', 2004:2008))
+head(elect.gen.tot)
+names(elect.gen.tot) <- c('id', paste('y', 2004:2008, sep=''))
+head(elect.gen.tot)
+elect.gen.tot$id <- tolower(elect.gen.tot$id)
+world.ggmape <- merge(world.ggmap, elect.gen.tot, by = "id", all = TRUE)
+world.ggmape <- merge(world.map, elect.gen.tot, by = "id", all = TRUE)
+head(world.map$id)
+head(world.map$ID)
+names(world.map)
+x <- runif(100)
+z <- rep(c(0,1), each=50)
+ey <- 1 + x*2 + z*2 + x*z*0.5
+y <- rnorm(ey)
+plot(x[z==0], y[z==0], col='blue')
+points(x[z==1], y[z==1], col='red')
+mean(x[z==1])
+mean(x[z==0])
+y <- rnorm(100, ey, 1)
+plot(x[z==0], y[z==0], col='blue')
+points(x[z==1], y[z==1], col='red')
+mean(x[z==0])
+mean(x[z==1])
+q()
+6.9/7.3
+6.9/7.4
+q()
+1948.30-2093
+0.000001
+update.packages(ask=FALSE)
+install.packages('MCMCglmm')
+install.packages('rjags')
+double.center <- function(X){#
+	rm <- rowMeans(X) #
+	cm <- colMeans(X)#
+	X - outer(rs, cs, "+") - mean(X)#
+}
+X <- matrix(rnorm(20), nrow=4)
+X
+X <- matrix(rnorm(20), ncol=4)
+X
+cor(X)
+cor(double.center(X))
+cor(double.center(X))double.center <- function(X){#
+	rm <- rowMeans(X) #
+	cm <- colMeans(X)#
+	X - outer(rm, cm, "+") - mean(X)#
+}
+double.center <- function(X){#
+	rm <- rowMeans(X) #
+	cm <- colMeans(X)#
+	X - outer(rm, cm, "+") - mean(X)#
+}
+cor(double.center(X))
+cor((X))
+double.center <- function(X){#
+	rm <- rowMeans(X) #
+	cm <- colMeans(X)#
+	X - outer(rm, cm, "+") + mean(X)#
+}
+cor((X))
+cor(double.center(X))
+X
+outer(rowMeans(X), colMeans(X), "+")
+outer(rowMeans(X), length(colMeans(X)), "+")
+outer(rowMeans(X), rep(1, length(colMeans(X))), "+")
+X <- outer(rowMeans(X), rep(1, length(colMeans(X))), "+") - outer(rep(1, length(rowMeans(X)), colMeans(X), "+") - mean(X)
+)
+X <- outer(rowMeans(X), rep(1, length(colMeans(X))), "+") - outer(rep(1, length(rowMeans(X))), colMeans(X), "+") - mean(X)
+X <- matrix(rnorm(20), ncol=4)
+X1 <- outer(rowMeans(X), rep(1, length(colMeans(X))), "+") - outer(rep(1, length(rowMeans(X))), colMeans(X), "+") - mean(X)
+X2 <- double.center(X)
+X1
+X2
+cor(X1)
+X1 <- X - outer(rowMeans(X), rep(1, length(colMeans(X))), "+") - outer(rep(1, length(rowMeans(X))), colMeans(X), "+") + mean(X)
+X2 <- double.center(X)
+X1
+X2
+cor(X)
+cor(X1)
+cor(X2)
+mean(X)
+colMeans(X1)
+rowMeans(X1)
+rowMeans(X2)
+colMeans(X2)
+mean(X2)
+cov(X2)
+cov(t(X2))
+cov(X)
+cor(X)
+?svd
+q()
+library(car)
+library(lme4)
+1440/900
+16/9
+4/3
+11/7.33
+1024/768
+800/600
+1280/720
+library(austin)
+q()
+source('engines.R')
+dir()
+source('uncertainty.R')
+source('wordfish.R')
+wordfish
+dd <- read.csv('~/Desktop/418_short.csv', row.names=1)
+head(dd)
+ddt <- t(dd)
+wordfish
+mod <- wordfish(ddt, dir=c(1,2), verbose=TRUE)
+library(numDeriv)
+mod <- wordfish(ddt, dir=c(1,2), verbose=TRUE)
+mod
+str(mod)
+summary(mod)
+plot(mod)
+str(summary(mod))
+(summary(mod)$Estimate)
+summary(mod)$Estimate
+summary(mod)$scores$Estimate
+dim(ddt)
+liubrary(MASS)
+library(MASS)
+mod.ca <- corresp(ddt, nf=2)
+mod.ca$rscores
+mod.ca$rscore
+cor(mod.ca$rscore[,1], summary(mod)$scores$Estimate)
+plot(mod.ca$rscore[,1], summary(mod)$scores$Estimate)
+plot(mod.ca$rscore[,2], summary(mod)$scores$Estimate)
+plot(mod.ca$rscore)
+summary(mod.ca)
+(mod.ca$cor)
+mod.ca <- corresp(ddt, nf=5)
+(mod.ca$cor)
+head(ddt)mod.ca <- corresp(ddt, nf=)
+head(ddt)
+colSums(ddt)
+mod.ca <- corresp(ddt, nf=40)
+mod.ca$cor
+mod.ca <- corresp(ddt, nf=90)
+mod.ca$cor
+source('wfm.R')
+ddts <- trim(ddt)
+dim(ddts)
+ddts <- trim(ddt, min.doc=2)
+dim(ddts)
+ddts <- trim(ddt, min.doc=2, min.count=2)
+dim(ddts)
+mod.ca <- corresp(ddts, nf=20)
+mod.ca$cor
+ddts
+trim
+q()

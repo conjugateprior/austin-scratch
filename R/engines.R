@@ -397,7 +397,8 @@ wordscores <- function(wfm, scores, fit.fun='classic.wordscores', verbose=FALSE)
   class(params) <- c('wordscores',  class(params)) 
   return(params)
 }
-##' Fit a wordscores model
+
+##' Fit a Wordscores model
 ##'
 ##' Fit a Wordscores model using the algorithm in Laver and Garry.
 ##' This means tossing out the words that never occur and

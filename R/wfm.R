@@ -234,3 +234,13 @@ trim <- function(wfm, min.count=5, min.doc=5, sample.docs=NULL, sample.words=NUL
   return(wfm[tokeep.docs, tokeep.words, drop=FALSE])
 }
 
+
+######## transformation functions
+
+double.center <- function(X){
+	rm <- rowMeans(X) 
+	cm <- colMeans(X)
+	X - outer(rm, cm, "+") + mean(X)
+}
+
+
