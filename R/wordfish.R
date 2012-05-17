@@ -137,6 +137,7 @@ summary.wordfish <- function(object, level=0.95, ...){
   return(ret)
 }
 
+
 ##' Print a wordfish model summary
 ##'
 ##' Prints a wordfish model summary

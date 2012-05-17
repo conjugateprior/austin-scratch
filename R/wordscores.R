@@ -26,6 +26,45 @@ summary.wordscores <- function(object, ...){
   invisible(dd)
 }
 
+##' Summarise an 'in sample' wordscores model
+##'
+##' Generates some minimal statistics about the document set from
+##' which wordscores have been calculated, and the estimated 
+##' positions of unscored documents
+##' 
+##' @title Summarise an 'in sample 'wordscores model 
+##' @param object insample.wordscores model
+##' @param ... Not used
+##' @return A data.frame with document statistics
+##' @method summary wordscores
+##' @export
+##' @author Will Lowe
+summary.insample.wordscores <- function(object, ...){
+  cat("Call:\n\t")
+  print(object$call)
+  cat("\n")
+  
+  fixed <- which(!is.na(object$orig.scores))
+  free <- which(is.na(object$orig.scores))
+  
+  score.type <- rep("", length(object$theta))
+  score.type[fixed] <- "R"
+  
+  y <- object$orig.scores[fixed]
+  x <- object$theta[fixed] ## actually scaled versions 
+  cc <- coef(lm(y~x))
+  backscaled <- object$orig.scores
+  backscaled[free] <- cc[1] + cc[2]*object$theta[free]
+  
+  dd <- data.frame(Type=score.type,
+                   Scaled=object$theta,
+                   Original=backscaled)
+  rownames(dd) <- rownames(object$data)
+  print(dd, digits=3)
+  invisible(dd)
+}
+
+
 ##' Wordscores from a wordscores model
 ##'
 ##' Just lists the wordscores

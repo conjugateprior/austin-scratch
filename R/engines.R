@@ -173,7 +173,8 @@ classic.wordfish <- function(wfm, dir, tol, sigma, params, verbose=FALSE){
                 words=colnames(wfm), sigma=sigma,
                 ll=ll, ll.path=ll.path, data=wfm)
 
-  return(model)  ## just a list of stuff at this point
+  class(model) <- c('classic.wordfish', 'wordfish', class(model))
+  return(model)  
 }
 
 ##' Fit a wordfish model
@@ -230,7 +231,6 @@ wordfish <- function(wfm, dir=c(1, 10), tol=1e-06, sigma=3, params=NULL, init.fu
   params$se.theta <- theta.se
   params$call <- thecall
   
-  class(params) <- c("wordfish", class(params))
   return(params)
 }
 
@@ -386,17 +386,19 @@ orthonormalize <- function(u, basis=FALSE, norm=FALSE){
 ##' @param scores reference scores for all documents
 ##' @param fit.fun engine to use to fit the model
 ##' @param verbose whether to give a running commentary
+##' @param ... further arguments passed to engine specified by fit.fun
 ##' @return a wordscores model
 ##' @export
 ##' @author Will Lowe
-wordscores <- function(wfm, scores, fit.fun='classic.wordscores', verbose=FALSE){
+wordscores <- function(wfm, scores, fit.fun='classic.wordscores', verbose=FALSE, ...){
   thecall <- match.call()
   wfm <- prepare.data(wfm, verbose)
-  params <- do.call(fit.fun, list(wfm, scores), quote=TRUE)
+  params <- do.call(fit.fun, list(wfm, scores, verbose=verbose, ...), quote=TRUE)
   params$call <- thecall
-  class(params) <- c('wordscores',  class(params)) 
+  ## fit.fun sets the class
   return(params)
 }
+
 
 ##' Fit a Wordscores model
 ##'
@@ -408,18 +410,85 @@ wordscores <- function(wfm, scores, fit.fun='classic.wordscores', verbose=FALSE)
 ##' @title Fit a wordscores model 
 ##' @param wfm a word count matrix with documents as rows and words as columns
 ##' @param scores reference document scores
+##' @param verbose ignored
 ##' @export
 ##' @return a fitted wordscores model 
 ##' @author Will Lowe
-classic.wordscores <- function(wfm, scores){
+classic.wordscores <- function(wfm, scores, verbose){
   C <- wfm[,colSums(wfm)>0]  ## just the words that occur
   F <- C / outer(rep(1, nrow(C)), colSums(C))
   pi <- as.numeric((scores %*% F) / colSums(F))
   names(scores) <- rownames(wfm) ## just in case
   names(pi) <- colnames(C)
-  list(pi=pi, theta=scores, data=wfm)
+  ll <- list(pi=pi, theta=scores, data=wfm)
+  class(ll) <- c('classic.wordscores', 'wordscores', class(ll))
+  return(ll)
 }
 
+insample.wordscores <- function(wfm, scores=rep(NA, nrow(wfm)), dir=NULL, tol, verbose, max.iter=100){
+  
+  colnorm <- function(wf){ scale(wf, center=FALSE, scale=colSums(wf)) }
+  rownorm <- function(wf){ t(scale(t(wf), center=FALSE, scale=rowSums(wf))) }
+  sqdiff <- function(o, f){ sum((o-f)**2) }
+  ## make x zero mean unit variance 
+  unitnorm <- function(x){ m <- mean(x); vv <- sum((x-m)**2)/length(x); (x-m)/sqrt(vv) }
+  
+  free <- which(is.na(scores))
+  fixed <- which(!is.na(scores))
+  
+  ## random word scores for non-fixed elements
+  oldws <- rnorm(ncol(wfm))
+  if (length(free)==length(scores)){
+  	oldds <- unitnorm(rnorm(nrow(wfm)))
+    ds <- unitnorm( rownorm(wfm) %*% oldws )
+  } else {
+  	oldds <- scores
+  	oldds[free] <- rnorm(length(free), 
+  	                     mean=mean(scores[fixed]),
+  	                     sd=sd(scores[fixed]))
+  	oldds <- unitnorm(oldds)
+    ds <- scores
+    ds[free] <- rownorm(wfm[free,,drop=FALSE]) %*% oldws
+    ds <- unitnorm(ds)
+  }  
+  ws <- unitnorm( t(t(ds) %*% colnorm(wfm)) )
+
+  course <- rep(NA, max.iter)     
+  iter <- 1
+  while (iter <= max.iter){
+  	diff <- sqdiff(c(oldds, oldws), c(ds, ws))
+    if (diff < tol)
+    	break
+    	
+    course[iter] <- diff 
+    if (verbose) cat(paste(iter, diff, "\n"))
+    
+    oldws <- ws
+    ws <- unitnorm( t(t(ds) %*% colnorm(wfm)) )
+    
+    oldds <- ds
+    ds[free] <- rownorm(wfm[free,,drop=FALSE]) %*% ws
+    ds <- unitnorm(ds)
+   		
+    iter <- iter + 1
+  }
+  attributes(ds) <- NULL
+  attributes(ws) <- NULL
+  
+  if (!is.null(dir)){
+  	if (ds[dir[1]] > ds[dir[2]]){
+  		ds <- (-1)*ds
+  		ws <- (-1)*ws
+		## small risk of flipping fixed scores
+		if (cor(scores[fixed], ds[fixed])<0)
+			warning("Enforcing direction (dir) has flipped the sign of the fixed scores") 
+  	}
+  }
+  
+  ll <- list(pi=ws, theta=ds, orig.scores=scores, data=wfm, path=course[!is.na(course)])
+  class(ll) <- c('insample.wordscores', 'wordscores', class(ll))
+  return(ll)
+}
 
 rcm.wordfish <- function(wfm, dir, tol, sigma, params, verbose=FALSE){
 
@@ -539,6 +608,8 @@ rcm.wordfish <- function(wfm, dir, tol, sigma, params, verbose=FALSE){
                 docs=rownames(wfm),
                 words=colnames(wfm),
                 ll=ll, ll.path=ll.path, data=wfm)
+  class(model) <- c('rcm.wordfish', 'wordfish', class(model))
+
 
   return(model)  ## just a list of stuff at this point
 }
