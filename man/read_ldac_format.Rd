@@ -1,8 +1,8 @@
-\name{read.ldac.format}
-\alias{read.ldac.format}
+\name{read_ldac_format}
+\alias{read_ldac_format}
 \title{Read an LDA-C file of word counts without word or document labels}
 \usage{
-  read.ldac.format(ldafile)
+  read_ldac_format(ldafile)
 }
 \arguments{
   \item{ldafile}{the file}

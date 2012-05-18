@@ -14,5 +14,5 @@
   data. American Political Science Review 97:2
 }
 \keyword{data}
-\keyword{dataset}
+\keyword{datasets}
 

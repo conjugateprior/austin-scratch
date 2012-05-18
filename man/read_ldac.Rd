@@ -1,8 +1,8 @@
-\name{read.ldac}
-\alias{read.ldac}
+\name{read_ldac}
+\alias{read_ldac}
 \title{Read an LDA-C format file or a folder of JFreq folder in LDA-C format}
 \usage{
-  read.ldac(f, jfreq = TRUE)
+  read_ldac(f, jfreq = TRUE)
 }
 \arguments{
   \item{f}{file or folder}
@@ -17,11 +17,11 @@
 }
 \details{
   When jfreq=TRUE read a JFreq output folder f in LDA-C
-  format, although you could just use read.jfreq for that.
+  format, although you could just use read_jfreq for that.
   When jfreq=FALSE read an LDA-C file f with no row or
   column labels.  Note that jfreq determines whether f is
   considered to be a folder or a file.  This function is a
-  wrapper around read.ldac.format
+  wrapper around read_ldac_format
 
   The LDA-C format is consists of a file in which line i is
   of the form N [A:X]+ representing that the word with

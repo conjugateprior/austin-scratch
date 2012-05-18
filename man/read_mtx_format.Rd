@@ -1,8 +1,8 @@
-\name{read.mtx.format}
-\alias{read.mtx.format}
+\name{read_mtx_format}
+\alias{read_mtx_format}
 \title{Read a Matrix Market format file}
 \usage{
-  read.mtx.format(mtxfile)
+  read_mtx_format(mtxfile)
 }
 \arguments{
   \item{mtxfile}{a filename}

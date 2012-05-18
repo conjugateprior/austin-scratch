@@ -21,5 +21,5 @@
   11:1.
 }
 \keyword{data}
-\keyword{dataset}
+\keyword{datasets}
 

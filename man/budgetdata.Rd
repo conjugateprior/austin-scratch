@@ -9,5 +9,5 @@
   Ken Benoit
 }
 \keyword{data}
-\keyword{dataset}
+\keyword{datasets}
 

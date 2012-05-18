@@ -23,8 +23,8 @@ prepare.data <- function(wfm, verbose){
 ##' Fit a wordfish model S&P style
 ##'
 ##' This engine fits the Slapin and Proksch parameterisation of a regularized version
-##' of Goodman's RC model by coordinate ascent,
-##' alternating the fitting of row scores theta (with main effects alpha)
+##' of the Goodman's 'Row Column' model using his 1979 algorithm that
+##' alternates the fitting of row scores theta (with main effects alpha)
 ##' and column scores beta (with main effects psi).
 ##' This version of the model is identified by imposing 1) a zero mean
 ##' and unit variance constraint on the row scores (theta), 2) a fixed zero for the first
@@ -32,17 +32,20 @@ prepare.data <- function(wfm, verbose){
 ##' theta[dir[1]] < theta[dir[2]].
 ##' 
 ##' There are some minor differences to previous implemenentations:
-##' Unlike Goodman's RC model, the beta is the MAP estimated computed with a
-##' mean zero, standard deviation sigma Normally distrubuted prior.
+##' Unlike Goodman's RC model, beta gets a
+##' Normal(0, sigma) prior / regularizer.
+##'
 ##' Unlike Slapin and Proksch's implementation, 'standard errors' for theta are computed from the
 ##' Hessian, assuming other parameters fixed, rather than using a parametric bootstrap.
-##' This is quicker, asymptotically equivalent, and tends to give very similar results.
+##' This is quicker, asymptotically equivalent, and tends to give very similar results,
+##' except when small numbers of documents mean that word parameters are
+##' badly estimated.
 ##' 
 ##' @title Fit a wordfish model in S&P parameterisation
 ##' @param wfm a word count matrix: documents are rows and columns are words
 ##' @param dir identification constraint: theta[dir[1]] will be less than theta[dir[2]]
 ##' @param tol the log likelihood amount less than which parameter estimation will stop
-##' @param sigma ridge regression regularization parameter
+##' @param sigma regularization parameter
 ##' @param params an initialized set of parameter to start estimation from
 ##' @param verbose whether to give running commentary
 ##' @export
@@ -179,20 +182,16 @@ classic.wordfish <- function(wfm, dir, tol, sigma, params, verbose=FALSE){
 
 ##' Fit a wordfish model
 ##'
-##' This engine fits the Slapin and Proksch parameterisation of a regularized version
-##' of Goodman's RC model by coordinate ascent,
-##' alternating the fitting of row scores theta (with main effects alpha)
-##' and column scores beta (with main effects psi).
-##' This version of the model is identified by imposing 1) zero mean
+##' This function fits the Slapin and Proksch parameterisation of a regularized version
+##' of Goodman's RC model.  The parameters are identified by imposing 1) zero mean
 ##' and unit variance constrants on row scores (theta), 2) a fixed zero for the first
 ##' row effect (alpha), and 3) a directional constraint on row scores:
 ##' theta[dir[1]] < theta[dir[2]].
-##' 
-##' There are some minor differences to previous implemenentations:
-##' Unlike Goodman's RC model, beta is ridge regularised with standard deviation sigma,
-##' there is no grand mean and no separate correlation parameter.
-##' Unlike Slapin and Proksch's implementation, 'standard errors' for theta are computed from the
-##' Hessian, assuming other parameters fixed rather than with a parametric bootstrap.
+##'
+##' This function is a wrapper which: calls a suitable parameter initialisation function, by default 
+##' 'loglinear.initialize.wordfish'; calls an estimation function, by default 
+##' 'classic.wordfish'; alternatives can be found elsewhere in the package, or
+##' you can write your own; computes asymptotic standard errors.
 ##' 
 ##' @title Fit a wordfish model
 ##' @param wfm a word count matrix, documents are rows and columns are words
@@ -200,8 +199,8 @@ classic.wordfish <- function(wfm, dir, tol, sigma, params, verbose=FALSE){
 ##' @param tol the log likelihood amount less than which parameter estimation will stop
 ##' @param sigma is ridge regression regularization parameter
 ##' @param params is an initialized set of parameter to start estimation from or NULL, which will trigger the application of init.fun
-##' @param init.fun function to generate an initial set of parameters. By default: loglinear.initialize.wordfish
-##' @param fit.fun the engine to use to fit the model. By default: classic.wordfish
+##' @param init.fun function to generate an initial set of parameters.
+##' @param fit.fun the engine to use to fit the model.
 ##' @param verbose whether to give running commentary on estimation
 ##' @export
 ##' @return a fitted wordfish model
@@ -326,6 +325,23 @@ loglinear.initialize.wordfish <- function(wfm){
   list(alpha=alpha, psi=psi, beta=beta, theta=theta)
 }
 
+cc.initialize <- function(wfm){
+	
+	require(irlba)
+	colmargin <- colSum(wfm)
+	colmargin <- colmargin / sum(colmargin)
+	rowmargin <- rowSums(wfm)
+	rowmargin <- rowmargin / sum(rowmargin)
+	indep <- outer(rowmargin, colmargin) * sum(wfm)
+	
+	## canonical correlation decomposition
+	decomp <- irlba((wfm-indep)/indep, nu=1, nv=1)
+	est.theta <- unitnorm(decomp$u[,1])
+	est.beta <- unitnorm(decomp$v[,1])
+	## TODO
+	
+}
+
 ##' Orthonormalize the columns of a matrix
 ##'
 ##' This function orthogonalises the columns of a matrix u using the
@@ -400,14 +416,14 @@ wordscores <- function(wfm, scores, fit.fun='classic.wordscores', verbose=FALSE,
 }
 
 
-##' Fit a Wordscores model
+##' Fit a classic Wordscores model
 ##'
-##' Fit a Wordscores model using the algorithm in Laver and Garry.
+##' Fit a classic Wordscores model using the algorithm in Laver et al 2003.
 ##' This means tossing out the words that never occur and
 ##' constructing wordscores.
-##' Consider using correspondence analysis instead!
+##' Use predict to get scores for 'virgin' documents.
 ##' 
-##' @title Fit a wordscores model 
+##' @title Fit a classic wordscores model 
 ##' @param wfm a word count matrix with documents as rows and words as columns
 ##' @param scores reference document scores
 ##' @param verbose ignored
@@ -425,18 +441,42 @@ classic.wordscores <- function(wfm, scores, verbose){
   return(ll)
 }
 
-insample.wordscores <- function(wfm, scores=rep(NA, nrow(wfm)), dir=NULL, tol, verbose, max.iter=100){
+unitnorm <- function(x){ m <- mean(x); vv <- sum((x-m)**2)/length(x); (x-m)/sqrt(vv) }
+
+##' Fit a space-saving in sample Wordscores model
+##'
+##' Fit a space saving insample Wordscores model, essentially a one-dimensional 
+##' correspondence analysis with zero or more document (row) scores fixed.
+##' 
+##' Note that the scores parameter does not work with same way as with classic.wordscores.
+##' Set documents with unknown positions ('virgin' documents') to NA in the 
+##' scores vector here instead of using predict.
+##'
+##' This version recomputes a weighted average of each row and column in every iteration
+##' This is slower than keeping a row normalised and a column normalised version of wfm.
+##' insample.wordscores does this.  Unless memory is tight that is a better idea. 
+##'  
+##' @title Fit an in sample wordscores model 
+##' @param wfm a word count matrix with documents as rows and words as columns
+##' @param scores a vector of document scores with NA for documents without known scores
+##' @param dir ensure that theta[dir[1]]<theta[dir[2]], usually only needed if scores is all NA (no reference scores
+##' @param tol the between iteration summed squared difference small enough to stop.
+##' @param verbose tracks the summed squared difference between iterations for document and word scores (includes fixed)
+##' @param max.iter maximum number of iterations
+##' @export
+##' @return a fitted wordscores model 
+##' @author Will Lowe
+insample.wordscores.spacesaving <- function(wfm, scores=rep(NA, nrow(wfm)), dir=NULL, tol, verbose, max.iter=100){
   
   colnorm <- function(wf){ scale(wf, center=FALSE, scale=colSums(wf)) }
   rownorm <- function(wf){ t(scale(t(wf), center=FALSE, scale=rowSums(wf))) }
   sqdiff <- function(o, f){ sum((o-f)**2) }
-  ## make x zero mean unit variance 
-  unitnorm <- function(x){ m <- mean(x); vv <- sum((x-m)**2)/length(x); (x-m)/sqrt(vv) }
   
   free <- which(is.na(scores))
   fixed <- which(!is.na(scores))
   
-  ## random word scores for non-fixed elements
+  ## random word scores for non-fixed elements if no ref scores
+  ## when there are, an initial classic.wordscores would be better
   oldws <- rnorm(ncol(wfm))
   if (length(free)==length(scores)){
   	oldds <- unitnorm(rnorm(nrow(wfm)))
@@ -489,6 +529,101 @@ insample.wordscores <- function(wfm, scores=rep(NA, nrow(wfm)), dir=NULL, tol, v
   class(ll) <- c('insample.wordscores', 'wordscores', class(ll))
   return(ll)
 }
+
+
+##' Fit an in sample Wordscores model
+##'
+##' Fit an in sample Wordscores model, essentially a one-dimensional 
+##' correspondence analysis with zero or more document (row) scores fixed.
+##' 
+##' Note that the scores parameter does not work with same way as with classic.wordscores.
+##' Set documents with unknown positions ('virgin' documents') to NA in the 
+##' scores vector here instead of using predict.
+##'
+##' This version keeps a row normalised and a column normalised version of wfm.
+##' insample.wordscores.spacesaving does not, which might be necessary if memory 
+##' is really tight.
+##'  
+##' @title Fit an in sample wordscores model 
+##' @param wfm a word count matrix with documents as rows and words as columns
+##' @param scores a vector of document scores with NA for documents without known scores
+##' @param dir ensure that theta[dir[1]]<theta[dir[2]], usually only needed if scores is all NA (no reference scores
+##' @param tol the between iteration summed squared difference small enough to stop.
+##' @param verbose tracks the summed squared difference between iterations for document and word scores (includes fixed)
+##' @param max.iter maximum number of iterations
+##' @export
+##' @return a fitted wordscores model 
+##' @author Will Lowe
+insample.wordscores <- function(wfm, scores=rep(NA, nrow(wfm)), dir=NULL, tol, verbose, max.iter=100){
+  
+  colnorm <- function(wf){ scale(wf, center=FALSE, scale=colSums(wf)) }
+  rownorm <- function(wf){ t(scale(t(wf), center=FALSE, scale=rowSums(wf))) }
+  sqdiff <- function(o, f){ sum((o-f)**2) }
+  ## make x zero mean unit variance 
+  unitnorm <- function(x){ m <- mean(x); vv <- sum((x-m)**2)/length(x); (x-m)/sqrt(vv) }
+  
+  free <- which(is.na(scores))
+  fixed <- which(!is.na(scores))
+  
+  wfm.rows <- rownorm(wfm)
+  wfm.cols <- colnorm(wfm)
+  
+  ## random word scores for non-fixed elements
+  oldws <- rnorm(ncol(wfm))
+  if (length(free)==length(scores)){
+  	oldds <- unitnorm(rnorm(nrow(wfm)))
+    ds <- unitnorm( rownorm(wfm) %*% oldws )
+  } else {
+  	oldds <- scores
+  	oldds[free] <- rnorm(length(free), 
+  	                     mean=mean(scores[fixed]),
+  	                     sd=sd(scores[fixed]))
+  	oldds <- unitnorm(oldds)
+    ds <- scores
+    ds[free] <- wfm.rows[free,,drop=FALSE] %*% oldws
+    ds <- unitnorm(ds)
+  }  
+  ws <- unitnorm( t(t(ds) %*% wfm.cols) )
+
+  course <- rep(NA, max.iter)     
+  iter <- 1
+  while (iter <= max.iter){
+  	diff <- sqdiff(c(oldds, oldws), c(ds, ws))
+    if (diff < tol)
+    	break
+    	
+    course[iter] <- diff 
+    if (verbose) cat(paste(iter, diff, "\n"))
+    
+    oldws <- ws
+    ws <- unitnorm( t(t(ds) %*% wfm.cols) )
+    
+    oldds <- ds
+    ds[free] <- wfm.rows[free,,drop=FALSE] %*% ws
+    ds <- unitnorm(ds)
+   		
+    iter <- iter + 1
+  }
+  attributes(ds) <- NULL
+  attributes(ws) <- NULL
+  
+  if (!is.null(dir)){
+  	if (ds[dir[1]] > ds[dir[2]]){
+  		ds <- (-1)*ds
+  		ws <- (-1)*ws
+		## small risk of flipping fixed scores
+		if (cor(scores[fixed], ds[fixed])<0)
+			warning("Enforcing direction (dir) has flipped the sign of the fixed scores") 
+  	}
+  }
+  
+  ll <- list(pi=ws, theta=ds, orig.scores=scores, data=wfm, path=course[!is.na(course)])
+  class(ll) <- c('insample.wordscores', 'wordscores', class(ll))
+  return(ll)
+}
+
+
+
 
 rcm.wordfish <- function(wfm, dir, tol, sigma, params, verbose=FALSE){
 
@@ -615,7 +750,7 @@ rcm.wordfish <- function(wfm, dir, tol, sigma, params, verbose=FALSE){
 }
 
 rcm.init <- function(wfm){
-	mm <- loglin(dd$Y+0.1, margin=list(c(1,2)), param=TRUE)	
+	mm <- loglin(wfm+0.1, margin=list(c(1,2)), param=TRUE)	
 	params <- list(grand=mm$param$`(Intercept)`,
 		psi=mm$param$words, alpha=mm$param$docs)
 	inter <- svd(mm$param$docs.words)

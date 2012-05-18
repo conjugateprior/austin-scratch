@@ -1,8 +1,8 @@
-\name{read.jfreq}
-\alias{read.jfreq}
+\name{read_jfreq}
+\alias{read_jfreq}
 \title{Read a JFreq output folder}
 \usage{
-  read.jfreq(folder)
+  read_jfreq(folder)
 }
 \arguments{
   \item{folder}{folder}

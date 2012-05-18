@@ -1,8 +1,8 @@
-\name{write.ldac}
-\alias{write.ldac}
+\name{write_ldac}
+\alias{write_ldac}
 \title{Write a matrix into LDA-C format}
 \usage{
-  write.ldac(wfm, folder,
+  write_ldac(wfm, folder,
     names = c("data.ldac", "docs.csv", "words.csv"))
 }
 \arguments{
@@ -27,7 +27,7 @@
   default data.ldac, docs.csv and words.csv, and which
   contain the word frequency information in LDA-C format,
   the document names, and the words respectively.  See
-  read.ldac for the details of the LDA-C format.
+  read_ldac for the details of the LDA-C format.
 }
 \author{
   Will Lowe

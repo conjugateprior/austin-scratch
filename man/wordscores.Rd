@@ -3,7 +3,7 @@
 \title{Fit a wordscores model}
 \usage{
   wordscores(wfm, scores, fit.fun = "classic.wordscores",
-    verbose = FALSE)
+    verbose = FALSE, ...)
 }
 \arguments{
   \item{wfm}{a word count matrix, with documents as rows
@@ -14,6 +14,9 @@
   \item{fit.fun}{engine to use to fit the model}
 
   \item{verbose}{whether to give a running commentary}
+
+  \item{...}{further arguments passed to engine specified
+  by fit.fun}
 }
 \value{
   a wordscores model

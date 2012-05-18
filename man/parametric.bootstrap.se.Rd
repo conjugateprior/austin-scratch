@@ -26,8 +26,8 @@
   Runs a parametric bootstrap on a wordfish model, i.e.
   asuming that the model is true.  This is asymptotically
   equivalent to the Hessian-derived standard errors
-  provided by wordfish.  This function creates L new word
-  frequency matrix by sampling from the fitted model and
+  provided by wordfish.  The function creates L new word
+  frequency matrices by sampling from the fitted model and
   returns a matrix of estimated thetas (row scores) To
   summarise these as standard errors take the standard
   deviation or compute quantiles of the returned matrix

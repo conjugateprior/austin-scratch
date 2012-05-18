@@ -1,6 +1,6 @@
 \name{trim}
 \alias{trim}
-\title{Trim a word freqeuncy matrix}
+\title{Trim a word frequency matrix}
 \usage{
   trim(wfm, min.count = 5, min.doc = 5, sample.docs = NULL,
     sample.words = NULL, verbose = TRUE)
@@ -9,11 +9,11 @@
   \item{wfm}{a word count matrix with docs as rows and
   words as columns}
 
-  \item{min.count}{minimum word frequency over all
-  documents}
+  \item{min.count}{minimum number of times a word occurs
+  over all documents}
 
-  \item{min.doc}{minimum number of documents containing at
-  least one instance of a word}
+  \item{min.doc}{minimum number of documents that must
+  contain a word}
 
   \item{sample.docs}{number of randomly chosen remaining
   word types to retain in the matrix.  If NULL, all
@@ -32,8 +32,8 @@
 }
 \details{
   Removes words that do not both occur at least min.count
-  times in at least min.doc documents, and optionally
-  subsamples the remainder.
+  times in total across at least min.doc documents, and
+  optionally subsamples the remainder.
 }
 \author{
   Will Lowe

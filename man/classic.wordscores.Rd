@@ -2,19 +2,21 @@
 \alias{classic.wordscores}
 \title{Fit a wordscores model}
 \usage{
-  classic.wordscores(wfm, scores)
+  classic.wordscores(wfm, scores, verbose)
 }
 \arguments{
   \item{wfm}{a word count matrix with documents as rows and
   words as columns}
 
   \item{scores}{reference document scores}
+
+  \item{verbose}{ignored}
 }
 \value{
   a fitted wordscores model
 }
 \description{
-  Fit a wordscores model
+  Fit a Wordscores model
 }
 \details{
   Fit a Wordscores model using the algorithm in Laver and

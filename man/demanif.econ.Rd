@@ -15,5 +15,5 @@
   American Journal of Political Science 52(3), 705-722
 }
 \keyword{data}
-\keyword{dataset}
+\keyword{datasets}
 

@@ -1,8 +1,8 @@
-\name{write.bmr}
-\alias{write.bmr}
+\name{write_bmr}
+\alias{write_bmr}
 \title{Write a file for BMR/BXR}
 \usage{
-  write.bmr(wfm, y, file = "data.bmr")
+  write_bmr(wfm, y, file = "data.bmr")
 }
 \arguments{
   \item{wfm}{a word frequency matrix with documents as rows

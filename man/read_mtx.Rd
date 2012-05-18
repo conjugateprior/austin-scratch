@@ -1,8 +1,8 @@
-\name{read.mtx}
-\alias{read.mtx}
+\name{read_mtx}
+\alias{read_mtx}
 \title{Read a Matrix Market format file or folder}
 \usage{
-  read.mtx(f, jfreq = TRUE)
+  read_mtx(f, jfreq = TRUE)
 }
 \arguments{
   \item{f}{file or folder}
@@ -17,7 +17,7 @@
 }
 \details{
   If jfreq=TRUE read a JFreq output folder f in Matrix
-  Market format, although you could just use read.jfreq for
+  Market format, although you could just use read_jfreq for
   that.  If jfreq=FALSE read a Matrix Market file f with no
   row or column labels.  Note that jfreq determines whether
   f is considered to be a folder or a file.  This is a thin
