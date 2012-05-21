@@ -1,4 +1,5 @@
-
 .DS_Store
-
-README.md~
+.Rapp.history
+*~
+man/*.Rd
+NAMESPACE

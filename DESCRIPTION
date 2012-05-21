@@ -11,7 +11,8 @@ Description: Doing things with words currently means scaling documents on a
 Depends:
     R (>= 2.10),
     numDeriv,
-    Matrix
+    Matrix,
+    irlba
 License: GPL
 Collate:
     'austin.R'

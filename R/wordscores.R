@@ -36,7 +36,7 @@ summary.wordscores <- function(object, ...){
 ##' @param object insample.wordscores model
 ##' @param ... Not used
 ##' @return A data.frame with document statistics
-##' @method summary wordscores
+##' @method summary insample.wordscores
 ##' @export
 ##' @author Will Lowe
 summary.insample.wordscores <- function(object, ...){
