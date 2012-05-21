@@ -768,5 +768,36 @@ rcm.init <- function(wfm){
 
 	return(params)
 }
-	
+
+demo.sim <- function(phi=0.2){
+  mm <- seq(-1,1,by=.2)
+  mm <- mm - mean(mm)
+  uv <- unitnorm(1:length(mm))
+  mat <- exp(outer(mm, mm, '+') + outer(uv, uv) * phi)
+  #samp <- matrix.sim.pois(mat)  
+  dimnames(mat) <- list(row=LETTERS[1:length(mm)], col=LETTERS[1:length(mm)])
+  list(mr=mm, mc=mm, u=uv, v=uv, phi=phi, exp=mat)
+}
+matrix.sim.pois <- function(mat){
+  r <- dim(mat)[1]
+  c <- dim(mat)[2]
+  matrix(rpois(rep(1, r*c), as.vector(mat)), nrow=r) 
+}
+
+sim.assoc <- function(grand, mr, mc, u, v, phi){
+  R <- length(mr)
+  C <- length(mc)
+  expected <- exp(grand + outer(mr, mc, "+") + outer(u, v)*phi)
+  Matrix(rpois(rep(1, R*C), as.vector(expected)), ncol=C) 
+}
+
+### switch parameterisations
+assoc2wordfish <- function(grand, mr, mc, u, v, phi){
+  
+}
+
+### switch parameterisations
+wordfish2assoc <- function(alpha, phi, theta, beta, dir){
+
+}
 
