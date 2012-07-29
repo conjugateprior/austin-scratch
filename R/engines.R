@@ -791,13 +791,45 @@ sim.assoc <- function(grand, mr, mc, u, v, phi){
   Matrix(rpois(rep(1, R*C), as.vector(expected)), ncol=C) 
 }
 
+##############
+
+sample.sd <- function(x){ sqrt(var(x)*(length(x)-1)/length(x)) }
+
 ### switch parameterisations
-assoc2wordfish <- function(grand, mr, mc, u, v, phi){
+as.wordfish <- function(o){
+  if (!all(c() %in% names(o)))
+	stop("This function expects a list with names 'theta', 'beta', 'alpha', and 'psi'")
+}
+
+### switch params
+as.assoc <- function(o){
+  if (!all(c('theta', 'beta', 'psi', 'alpha', 'll', 'data') %in% names(o)))
+	stop("Expects a list with names 'theta', 'beta', 'alpha', 'psi', 'll', and 'data'")
+	
+  u <- o$theta
+  mnb <- mean(o$beta)
+  sdb <- sample.sd(o$beta)
+  v <- (o$beta - mnb) / sdb
+  sigma <- sdb
+  lambdaR <- o$alpha + o$theta * mnb
+  lambdaR <- o$alpha - mean(o$alpha)
+  lambdaC <- o$psi - mean(o$psi)
+  lambda <- mean(o$alpha) + mean(o$psi)
   
+  mod <- list(lambda=lambda, lambdaR=lambdaR, lambdaC=lambdaC, 
+              u=u, v=v, sigma=sigma, data=o$data, ll=o$ll)
+
+  class(mod) <- c('rc_assoc', 'assoc', class(mod))
+  return(mod)
 }
 
-### switch parameterisations
-wordfish2assoc <- function(alpha, phi, theta, beta, dir){
-
+logLik.assoc <- function(object, ...){
+	object$ll
 }
+
+
+
+
+
+
 
